@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'mediciones',
 ]
@@ -105,8 +106,17 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://frontend-caudal.vercel.app/",
+    "https://frontend-caudal.vercel.app",
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
