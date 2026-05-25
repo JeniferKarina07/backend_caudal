@@ -126,7 +126,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://frontend-caudal.vercel.app",
+    "https://caudal-uis-project.vercel.app/",
 ]
 
 REST_FRAMEWORK = {
