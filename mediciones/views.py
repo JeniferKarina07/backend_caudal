@@ -5,6 +5,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .models import FlowReading
+from .serializers import FlowReadingReadSerializer, FlowReadingSerializer
+from .services import dashboard_payload, latest_status_payload
+
 
 def serialize_user(user):
     full_name = user.get_full_name().strip()
@@ -122,3 +126,62 @@ class LogoutView(APIView):
     def post(self, request):
         request.auth.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class FlowReadingListCreateView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        limit = min(int(request.query_params.get('limit', 100)), 500)
+        queryset = FlowReading.objects.order_by('-fecha')[:limit]
+        serializer = FlowReadingReadSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = FlowReadingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        reading = serializer.save()
+        return Response(
+            FlowReadingReadSerializer(reading).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class LatestFlowReadingView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        payload = latest_status_payload()
+        reading = payload.pop('reading')
+        payload['reading'] = FlowReadingReadSerializer(reading).data if reading else None
+        return Response(payload)
+
+
+class DashboardView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        payload = dashboard_payload()
+        latest_reading = payload['latest'].pop('reading')
+        payload['latest']['reading'] = (
+            FlowReadingReadSerializer(latest_reading).data if latest_reading else None
+        )
+        payload['recent_readings'] = FlowReadingReadSerializer(
+            payload['recent_readings'],
+            many=True,
+        ).data
+        payload['active_alerts'] = FlowReadingReadSerializer(
+            payload['active_alerts'],
+            many=True,
+        ).data
+        return Response(payload)
+
+
+class AlertsView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        limit = min(int(request.query_params.get('limit', 100)), 500)
+        queryset = FlowReading.objects.exclude(alerta='').order_by('-fecha')[:limit]
+        serializer = FlowReadingReadSerializer(queryset, many=True)
+        return Response(serializer.data)
