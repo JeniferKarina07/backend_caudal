@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
@@ -32,8 +33,19 @@ class FlowReadingApiTests(TestCase):
         self.assertEqual(response.data['estado'], FlowReading.Status.SECO)
         self.assertTrue(response.data['alerta'])
 
-    def test_dashboard_returns_monitoring_summary(self):
+    def test_dashboard_requires_staff_user(self):
+        response = self.client.get(reverse('flow-dashboard'))
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_dashboard_returns_monitoring_summary_for_staff_user(self):
         FlowReading.objects.create(caudal_entrada=12, estado=FlowReading.Status.NORMAL)
+        user = get_user_model().objects.create_user(
+            username='admin',
+            password='admin-pass-123',
+            is_staff=True,
+        )
+        self.client.force_authenticate(user=user)
 
         response = self.client.get(reverse('flow-dashboard'))
 
