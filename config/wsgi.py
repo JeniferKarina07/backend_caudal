@@ -13,4 +13,8 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
+from config.startup import run_startup_migrations
+
+run_startup_migrations()
+
 application = get_wsgi_application()
